@@ -1,0 +1,5 @@
+# Never upload your secret key to GitHub!
+*.json
+data/
+__pycache__/
+.env
