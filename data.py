@@ -31,9 +31,18 @@ PROFILE_COLUMNS = [
 
 @st.cache_resource
 def get_client():
-    """Connect to Google Sheets — cached so it only connects once."""
-    creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
+    """Connect to Google Sheets — uses secrets in cloud, JSON file locally."""
+    try:
+        # Cloud: read from Streamlit secrets
+        import json
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
+    except (KeyError, FileNotFoundError):
+        # Local: read from JSON file
+        creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
     return gspread.authorize(creds)
+
 
 def get_sheets():
     """Get or create the two sheets: Log and Profile."""
