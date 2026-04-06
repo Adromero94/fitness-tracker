@@ -48,8 +48,11 @@ if page == "📋 Log Today":
     # Backfill option
     log_past = st.checkbox("📅 Log a past date instead of today?")
     if log_past:
-        log_date = st.date_input("Select date", value=date.today() - timedelta(days=1),
-                                  max_value=date.today())
+        log_date = st.date_input(
+            "Select date",
+            value=date.today() - timedelta(days=1),
+            max_value=date.today()
+        )
     else:
         log_date = date.today()
 
@@ -63,63 +66,77 @@ if page == "📋 Log Today":
             existing = match.iloc[-1]
             st.info("📝 An entry exists for this date — saving will update it.")
 
-    # ── Live calorie target display ──
+    # Live calorie target display
     daily_target = float(profile.get("daily_calorie_target") or 2000)
     bmr = float(profile.get("bmr") or 1800)
-    current_weight = data.get_latest_weight(df) or float(profile.get("start_weight") or 180)
+    current_weight = data.get_latest_weight(df) or float(
+        profile.get("start_weight") or 180)
 
     st.divider()
-    # Weight checkbox outside form so it renders immediately
+
+    # Weight outside form so checkbox renders immediately
     st.subheader("⚖️ Weight")
-    log_weight = st.checkbox("Log weight today?",
-        value=True if existing is not None and existing.get("weight_lbs") else False)
+    log_weight = st.checkbox(
+        "Log weight today?",
+        value=True if existing is not None and existing.get("weight_lbs") else False
+    )
     weight_lbs = None
     if log_weight:
         last_weight = data.get_latest_weight(df)
         default_w = float(last_weight) if last_weight else float(
             profile.get("start_weight") or 180)
         weight_lbs = st.number_input(
-            "Weight (lbs)", min_value=50.0, max_value=500.0,
+            "Weight (lbs)",
+            min_value=50.0,
+            max_value=500.0,
             value=float(existing["weight_lbs"])
             if existing is not None and existing.get("weight_lbs")
             else default_w,
             step=0.1
         )
 
-st.divider()
+    st.divider()
 
-with st.form("log_form"):
+    with st.form("log_form"):
         col1, col2 = st.columns(2)
 
         with col1:
             st.subheader("🍽️ Calories")
             calories_eaten = st.number_input(
                 "Calories eaten today",
-                min_value=0, max_value=10000,
-                value=int(existing["calories_eaten"]) if existing is not None else 2000,
+                min_value=0,
+                max_value=10000,
+                value=int(existing["calories_eaten"])
+                if existing is not None else 2000,
                 step=50
             )
 
             # Live fuel gauge
             remaining = daily_target - calories_eaten
             if remaining >= 0:
-                st.success(f"✅ Remaining: **{int(remaining):,} cal** "
-                          f"(Target: {int(daily_target):,})")
+                st.success(
+                    f"✅ Remaining: **{int(remaining):,} cal** "
+                    f"(Target: {int(daily_target):,})"
+                )
             else:
-                st.error(f"⚠️ Over target by **{abs(int(remaining)):,} cal** "
-                        f"(Target: {int(daily_target):,})")
+                st.error(
+                    f"⚠️ Over target by **{abs(int(remaining)):,} cal** "
+                    f"(Target: {int(daily_target):,})"
+                )
 
             st.subheader("😴 Sleep")
             sleep_hours = st.number_input(
                 "Hours of sleep last night",
-                min_value=0.0, max_value=24.0,
+                min_value=0.0,
+                max_value=24.0,
                 value=float(existing["sleep_hours"])
                 if existing is not None and existing.get("sleep_hours") else 7.0,
                 step=0.5
             )
             sleep_quality = st.slider(
                 "Sleep quality (1=terrible, 5=great)",
-                min_value=1, max_value=5,
+                min_value=1,
+                max_value=5,
                 value=int(existing["sleep_quality"])
                 if existing is not None and existing.get("sleep_quality") else 3
             )
@@ -139,23 +156,27 @@ with st.form("log_form"):
             if exercise_type != "None":
                 exercise_minutes = st.number_input(
                     "Exercise minutes",
-                    min_value=1, max_value=300,
+                    min_value=1,
+                    max_value=300,
                     value=int(existing["exercise_minutes"])
                     if existing is not None and existing.get("exercise_minutes") else 30,
                     step=5
                 )
                 calories_burned_exercise = st.number_input(
                     "Calories burned (from your watch/app)",
-                    min_value=0, max_value=2000,
+                    min_value=0,
+                    max_value=2000,
                     value=int(existing["calories_burned_exercise"])
-                    if existing is not None and existing.get("calories_burned_exercise") else 200,
+                    if existing is not None
+                    and existing.get("calories_burned_exercise") else 200,
                     step=10
                 )
 
             st.subheader("👟 Steps")
             steps = st.number_input(
                 "Steps today",
-                min_value=0, max_value=100000,
+                min_value=0,
+                max_value=100000,
                 value=int(existing["steps"])
                 if existing is not None and existing.get("steps") else 0,
                 step=100
@@ -166,9 +187,11 @@ with st.form("log_form"):
             total_burned = calculations.calc_total_burned(
                 bmr, steps_calories, calories_burned_exercise
             )
-            st.info(f"🔥 Est. total burned today: **{int(total_burned):,} cal**\n\n"
-                   f"  BMR: {int(bmr):,} + Steps: {int(steps_calories):,} "
-                   f"+ Exercise: {int(calories_burned_exercise):,}")
+            st.info(
+                f"🔥 Est. total burned today: **{int(total_burned):,} cal**\n\n"
+                f"BMR: {int(bmr):,} + Steps: {int(steps_calories):,} "
+                f"+ Exercise: {int(calories_burned_exercise):,}"
+            )
 
             st.subheader("📝 Notes")
             notes = st.text_area(
@@ -183,7 +206,7 @@ with st.form("log_form"):
             "✅ Save Entry", use_container_width=True
         )
 
-if submitted:
+    if submitted:
         steps_calories = calculations.calc_steps_calories(steps, current_weight)
         total_burned = calculations.calc_total_burned(
             bmr, steps_calories, calories_burned_exercise
@@ -230,32 +253,33 @@ elif page == "📊 Dashboard":
         st.warning("⚠️ Please set up your Profile first!")
         st.stop()
 
-    # ── Date range slider ──
+    # Date range slider
     st.subheader("📅 Date Range")
-    days_options = {"Last 7 Days": 7, "Last 14 Days": 14,
-                    "Last 30 Days": 30, "All Time": 0}
-    days_label = st.select_slider("Show data for:",
-                                   options=list(days_options.keys()),
-                                   value="Last 30 Days")
+    days_options = {
+        "Last 7 Days": 7,
+        "Last 14 Days": 14,
+        "Last 30 Days": 30,
+        "All Time": 0
+    }
+    days_label = st.select_slider(
+        "Show data for:",
+        options=list(days_options.keys()),
+        value="Last 30 Days"
+    )
     days = days_options[days_label]
 
     st.divider()
 
-    # ── Goal & prediction ──
+    # Goal & prediction
     prediction = calculations.calc_goal_prediction(df, profile)
     if prediction and "estimated_date" in prediction:
         st.subheader("🎯 Goal Tracker")
         c1, c2, c3, c4, c5 = st.columns(5)
-        c1.metric("Current Weight",
-                  f"{prediction['current_weight']} lbs")
-        c2.metric("Goal Weight",
-                  f"{prediction['goal_weight']} lbs")
-        c3.metric("Still To Lose",
-                  f"{prediction['lbs_to_lose']} lbs")
-        c4.metric("Avg Weekly Loss",
-                  f"{prediction['avg_weekly_loss']} lbs")
-        c5.metric("Est. Arrival",
-                  prediction['estimated_date'].strftime("%b %d, %Y"))
+        c1.metric("Current Weight", f"{prediction['current_weight']} lbs")
+        c2.metric("Goal Weight", f"{prediction['goal_weight']} lbs")
+        c3.metric("Still To Lose", f"{prediction['lbs_to_lose']} lbs")
+        c4.metric("Avg Weekly Loss", f"{prediction['avg_weekly_loss']} lbs")
+        c5.metric("Est. Arrival", prediction['estimated_date'].strftime("%b %d, %Y"))
 
         pace = prediction.get("pace_status")
         if pace == "ahead":
@@ -265,17 +289,18 @@ elif page == "📊 Dashboard":
         elif pace == "behind":
             st.warning("🔴 You are behind pace — check the Weekly Report for recommendations.")
 
-        # Plateau detector
         if calculations.calc_plateau(df):
-            st.error("⚠️ Plateau detected — your weight has been stable for 10+ days "
-                    "despite a deficit. Consider adjusting your targets.")
+            st.error(
+                "⚠️ Plateau detected — your weight has been stable for 10+ days "
+                "despite a deficit. Consider adjusting your targets."
+            )
 
     elif prediction and "message" in prediction:
         st.info(prediction["message"])
 
     st.divider()
 
-    # ── Daily target ──
+    # Daily target & streak
     daily_target = float(profile.get("daily_calorie_target") or 2000)
     streak = data.get_streak(df)
     col1, col2, col3 = st.columns(3)
@@ -286,36 +311,35 @@ elif page == "📊 Dashboard":
         if not today_entry.empty:
             eaten_today = int(today_entry.iloc[-1]["calories_eaten"])
             remaining = int(daily_target - eaten_today)
-            col3.metric("🍽️ Remaining Today",
-                       f"{remaining:,} cal",
-                       delta=f"{eaten_today:,} eaten")
+            col3.metric(
+                "🍽️ Remaining Today",
+                f"{remaining:,} cal",
+                delta=f"{eaten_today:,} eaten"
+            )
 
     st.divider()
 
-    # ── Weekly summary cards ──
+    # Weekly summary
     weekly = calculations.calc_weekly_summary(df)
     if weekly:
         st.subheader("📅 Last 7 Days Summary")
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Avg Calories Eaten",
-                  f"{int(weekly['avg_calories_eaten']):,}")
-        c2.metric("Avg Calories Burned",
-                  f"{int(weekly['avg_calories_burned']):,}")
-        c3.metric("Avg Daily Deficit",
-                  f"{int(weekly['avg_deficit']):,} cal")
-        c4.metric("Avg Steps",
-                  f"{int(weekly['avg_steps']):,}")
+        c1.metric("Avg Calories Eaten", f"{int(weekly['avg_calories_eaten']):,}")
+        c2.metric("Avg Calories Burned", f"{int(weekly['avg_calories_burned']):,}")
+        c3.metric("Avg Daily Deficit", f"{int(weekly['avg_deficit']):,} cal")
+        c4.metric("Avg Steps", f"{int(weekly['avg_steps']):,}")
 
         if weekly["weight_change"] is not None:
             direction = "🔽" if weekly["weight_change"] < 0 else "🔼"
-            st.metric("Weight Change This Week",
-                     f"{direction} {weekly['weight_change']} lbs")
+            st.metric(
+                "Weight Change This Week",
+                f"{direction} {weekly['weight_change']} lbs"
+            )
 
     st.divider()
 
-    # ── Charts ──
+    # Charts
     st.subheader("📈 Charts")
-
     goal_weight = profile.get("goal_weight")
     target_date = profile.get("target_date")
 
@@ -369,7 +393,6 @@ elif page == "📅 Weekly Report":
         st.info("Not enough data yet — keep logging!")
         st.stop()
 
-    # ── Your numbers ──
     st.subheader("📈 Your Numbers This Week")
     c1, c2, c3 = st.columns(3)
     c1.metric("Avg Calories Eaten", f"{int(weekly['avg_calories_eaten']):,} /day")
@@ -383,7 +406,6 @@ elif page == "📅 Weekly Report":
 
     st.divider()
 
-    # ── Weight ──
     st.subheader("⚖️ Weight This Week")
     if weekly["weight_change"] is not None:
         direction = "🔽" if weekly["weight_change"] < 0 else "🔼"
@@ -396,25 +418,29 @@ elif page == "📅 Weekly Report":
 
     st.divider()
 
-    # ── Goal pace ──
     st.subheader("🎯 Goal Pace")
     if prediction and "pace_status" in prediction:
         pace = prediction["pace_status"]
         if pace == "ahead":
-            st.success(f"🟢 Ahead of pace — Est. arrival "
-                      f"{prediction['estimated_date'].strftime('%b %d, %Y')}")
+            st.success(
+                f"🟢 Ahead of pace — Est. arrival "
+                f"{prediction['estimated_date'].strftime('%b %d, %Y')}"
+            )
         elif pace == "on_track":
-            st.info(f"🟡 On track — Est. arrival "
-                   f"{prediction['estimated_date'].strftime('%b %d, %Y')}")
+            st.info(
+                f"🟡 On track — Est. arrival "
+                f"{prediction['estimated_date'].strftime('%b %d, %Y')}"
+            )
         elif pace == "behind":
-            st.warning(f"🔴 Behind pace — Est. arrival "
-                      f"{prediction['estimated_date'].strftime('%b %d, %Y')}")
+            st.warning(
+                f"🔴 Behind pace — Est. arrival "
+                f"{prediction['estimated_date'].strftime('%b %d, %Y')}"
+            )
     elif prediction and "message" in prediction:
         st.info(prediction["message"])
 
     st.divider()
 
-    # ── Step goal ──
     st.subheader("👟 Step Goal")
     step_days = weekly["step_goal_days"]
     st.write(f"You hit 10,000 steps **{step_days} out of 7 days** this week.")
@@ -422,7 +448,6 @@ elif page == "📅 Weekly Report":
 
     st.divider()
 
-    # ── Consistency score ──
     score = calculations.calc_consistency_score(weekly)
     st.subheader("⭐ Consistency Score")
     col1, col2 = st.columns([1, 3])
@@ -440,7 +465,6 @@ elif page == "📅 Weekly Report":
 
     st.divider()
 
-    # ── Recommendation ──
     st.subheader("🤖 This Week's Recommendation")
     rec = calculations.calc_recommendation(weekly, prediction)
     if rec:
@@ -453,10 +477,11 @@ elif page == "📅 Weekly Report":
 
     st.divider()
 
-    # ── Best and hardest day ──
     st.subheader("💡 Highlights")
     today = pd.Timestamp(date.today())
-    week_df = df[pd.to_datetime(df["date"]) >= today - pd.Timedelta(days=7)].copy()
+    week_df = df[
+        pd.to_datetime(df["date"]) >= today - pd.Timedelta(days=7)
+    ].copy()
     week_df["deficit_surplus"] = pd.to_numeric(
         week_df["deficit_surplus"], errors="coerce"
     )
@@ -491,19 +516,23 @@ elif page == "🧮 Calculators":
     with col1:
         gender = st.selectbox("Gender", ["Male", "Female"])
         age = st.number_input("Age", min_value=10, max_value=100, value=30)
-        height_ft = st.number_input("Height (feet)", min_value=3,
-                                     max_value=8, value=5)
-        height_in = st.number_input("Height (inches)", min_value=0,
-                                     max_value=11, value=10)
+        height_ft = st.number_input("Height (feet)", min_value=3, max_value=8, value=5)
+        height_in = st.number_input("Height (inches)", min_value=0, max_value=11, value=10)
     with col2:
-        weight = st.number_input("Current weight (lbs)", min_value=50.0,
-                                  max_value=500.0, value=180.0, step=0.5)
-        activity = st.selectbox("Activity level",
-                                 list(calculations.ACTIVITY_MULTIPLIERS.keys()))
-        goal_w = st.number_input("Goal weight (lbs)", min_value=50.0,
-                                  max_value=500.0, value=160.0, step=0.5)
-        target_d = st.date_input("Target date",
-                                  value=date.today() + timedelta(days=90))
+        weight = st.number_input(
+            "Current weight (lbs)", min_value=50.0, max_value=500.0,
+            value=180.0, step=0.5
+        )
+        activity = st.selectbox(
+            "Activity level", list(calculations.ACTIVITY_MULTIPLIERS.keys())
+        )
+        goal_w = st.number_input(
+            "Goal weight (lbs)", min_value=50.0, max_value=500.0,
+            value=160.0, step=0.5
+        )
+        target_d = st.date_input(
+            "Target date", value=date.today() + timedelta(days=90)
+        )
 
     if st.button("🔢 Calculate", use_container_width=True):
         height_inches = (height_ft * 12) + height_in
@@ -515,7 +544,6 @@ elif page == "🧮 Calculators":
 
         st.divider()
         st.subheader("📊 Your Results")
-
         c1, c2, c3 = st.columns(3)
         c1.metric("🧬 BMR", f"{int(bmr):,} cal",
                   help="Calories burned just staying alive")
@@ -543,8 +571,10 @@ elif page == "🧮 Calculators":
         st.write(f"- **Weekly loss rate:** "
                 f"{round((daily_deficit * 7) / 3500, 2)} lbs/week")
         st.write(f"- **BMR:** {int(bmr):,} cal (base metabolism)")
-        st.write(f"- **TDEE:** {int(tdee):,} cal "
-                f"(BMR × {calculations.ACTIVITY_MULTIPLIERS[activity]})")
+        st.write(
+            f"- **TDEE:** {int(tdee):,} cal "
+            f"(BMR × {calculations.ACTIVITY_MULTIPLIERS[activity]})"
+        )
 
         st.divider()
         if st.button("💾 Save these to my Profile", use_container_width=True):
@@ -569,45 +599,59 @@ elif page == "⚙️ Profile & Settings":
         st.subheader("👤 Personal Info")
         col1, col2 = st.columns(2)
         with col1:
-            name = st.text_input("Your name",
-                value=profile.get("name", "") if profile else "")
-            age = st.number_input("Age", min_value=10, max_value=100,
-                value=int(profile.get("age") or 30) if profile else 30)
-            gender = st.selectbox("Gender", ["Male", "Female"],
-                index=0 if not profile or profile.get("gender") == "Male" else 1)
+            name = st.text_input(
+                "Your name",
+                value=profile.get("name", "") if profile else ""
+            )
+            age = st.number_input(
+                "Age", min_value=10, max_value=100,
+                value=int(profile.get("age") or 30) if profile else 30
+            )
+            gender = st.selectbox(
+                "Gender", ["Male", "Female"],
+                index=0 if not profile or profile.get("gender") == "Male" else 1
+            )
         with col2:
-            height_ft = st.number_input("Height (feet)", min_value=3,
-                max_value=8, value=5)
-            height_in_extra = st.number_input("Height (extra inches)",
-                min_value=0, max_value=11,
+            height_ft = st.number_input(
+                "Height (feet)", min_value=3, max_value=8, value=5
+            )
+            height_in_extra = st.number_input(
+                "Height (extra inches)", min_value=0, max_value=11,
                 value=int((float(profile.get("height_inches") or 70)) % 12)
-                if profile else 10)
-            start_weight = st.number_input("Starting weight (lbs)",
-                min_value=50.0, max_value=500.0,
+                if profile else 10
+            )
+            start_weight = st.number_input(
+                "Starting weight (lbs)", min_value=50.0, max_value=500.0,
                 value=float(profile.get("start_weight") or 180.0)
-                if profile else 180.0, step=0.5)
+                if profile else 180.0, step=0.5
+            )
 
         st.subheader("🎯 Goal")
         col1, col2 = st.columns(2)
         with col1:
-            goal_weight = st.number_input("Goal weight (lbs)",
-                min_value=50.0, max_value=500.0,
+            goal_weight = st.number_input(
+                "Goal weight (lbs)", min_value=50.0, max_value=500.0,
                 value=float(profile.get("goal_weight") or 150.0)
-                if profile else 150.0, step=0.5)
+                if profile else 150.0, step=0.5
+            )
         with col2:
-            target_date = st.date_input("Target date",
+            target_date = st.date_input(
+                "Target date",
                 value=datetime.strptime(
                     str(profile.get("target_date")), "%Y-%m-%d").date()
-                if profile and profile.get("target_date") else
-                date.today() + timedelta(days=90))
+                if profile and profile.get("target_date")
+                else date.today() + timedelta(days=90)
+            )
 
         st.subheader("🏃 Activity Level")
-        activity_level = st.selectbox("Activity level",
+        activity_level = st.selectbox(
+            "Activity level",
             list(calculations.ACTIVITY_MULTIPLIERS.keys()),
             index=list(calculations.ACTIVITY_MULTIPLIERS.keys()).index(
                 profile.get("activity_level"))
-            if profile and profile.get("activity_level") in
-            calculations.ACTIVITY_MULTIPLIERS else 0)
+            if profile and profile.get("activity_level")
+            in calculations.ACTIVITY_MULTIPLIERS else 0
+        )
 
         saved = st.form_submit_button("💾 Save Profile", use_container_width=True)
 
@@ -633,7 +677,6 @@ elif page == "⚙️ Profile & Settings":
             "daily_calorie_target": daily_target
         }
         data.save_profile(new_profile)
-
         st.success("✅ Profile saved!")
         if floored:
             st.warning(
@@ -646,5 +689,5 @@ elif page == "⚙️ Profile & Settings":
         c1.metric("🧬 BMR", f"{int(bmr):,} cal")
         c2.metric("🔥 TDEE", f"{int(tdee):,} cal")
         c3.metric("🎯 Daily Target", f"{int(daily_target):,} cal")
-        st.rerun()            
+        st.rerun()
         
