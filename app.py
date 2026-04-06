@@ -282,12 +282,26 @@ elif page == "📊 Dashboard":
         c5.metric("Est. Arrival", prediction['estimated_date'].strftime("%b %d, %Y"))
 
         pace = prediction.get("pace_status")
-        if pace == "ahead":
-            st.success("🟢 You are ahead of pace — great work!")
+        if pace == "too_fast":
+            st.warning(
+                f"🟡 Losing faster than target "
+                f"({prediction['actual_weekly_loss']} lbs/week vs "
+                f"{prediction['target_weekly_loss']} target) — "
+                f"check Weekly Report for calorie adjustment."
+            )
         elif pace == "on_track":
-            st.info("🟡 You are on track for your goal date.")
-        elif pace == "behind":
-            st.warning("🔴 You are behind pace — check the Weekly Report for recommendations.")
+            st.success(
+                f"🟢 On track — losing "
+                f"{prediction['actual_weekly_loss']} lbs/week "
+                f"(target: {prediction['target_weekly_loss']} lbs/week)"
+            )
+        elif pace == "too_slow":
+            st.warning(
+                f"🔴 Behind target pace "
+                f"({prediction['actual_weekly_loss']} lbs/week vs "
+                f"{prediction['target_weekly_loss']} target) — "
+                f"check Weekly Report for calorie adjustment."
+            )
 
         if calculations.calc_plateau(df):
             st.error(
@@ -690,4 +704,3 @@ elif page == "⚙️ Profile & Settings":
         c2.metric("🔥 TDEE", f"{int(tdee):,} cal")
         c3.metric("🎯 Daily Target", f"{int(daily_target):,} cal")
         st.rerun()
-        
