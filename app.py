@@ -183,7 +183,7 @@ with st.form("log_form"):
             "✅ Save Entry", use_container_width=True
         )
 
-    if submitted:
+if submitted:
         steps_calories = calculations.calc_steps_calories(steps, current_weight)
         total_burned = calculations.calc_total_burned(
             bmr, steps_calories, calories_burned_exercise
