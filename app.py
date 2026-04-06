@@ -88,7 +88,7 @@ if log_weight:
 
 st.divider()
 
-    with st.form("log_form"):
+with st.form("log_form"):
         col1, col2 = st.columns(2)
 
         with col1:
