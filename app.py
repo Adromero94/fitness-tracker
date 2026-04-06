@@ -69,6 +69,24 @@ if page == "📋 Log Today":
     current_weight = data.get_latest_weight(df) or float(profile.get("start_weight") or 180)
 
     st.divider()
+# Weight checkbox outside form so it renders immediately
+st.subheader("⚖️ Weight")
+log_weight = st.checkbox("Log weight today?",
+    value=True if existing is not None and existing.get("weight_lbs") else False)
+weight_lbs = None
+if log_weight:
+    last_weight = data.get_latest_weight(df)
+    default_w = float(last_weight) if last_weight else float(
+        profile.get("start_weight") or 180)
+    weight_lbs = st.number_input(
+        "Weight (lbs)", min_value=50.0, max_value=500.0,
+        value=float(existing["weight_lbs"])
+        if existing is not None and existing.get("weight_lbs")
+        else default_w,
+        step=0.1
+    )
+
+st.divider()
 
     with st.form("log_form"):
         col1, col2 = st.columns(2)
@@ -90,22 +108,6 @@ if page == "📋 Log Today":
             else:
                 st.error(f"⚠️ Over target by **{abs(int(remaining)):,} cal** "
                         f"(Target: {int(daily_target):,})")
-
-            st.subheader("⚖️ Weight")
-            log_weight = st.checkbox("Log weight today?",
-                value=True if existing is not None and existing.get("weight_lbs") else False)
-            weight_lbs = None
-            if log_weight:
-                last_weight = data.get_latest_weight(df)
-                default_w = float(last_weight) if last_weight else float(
-                    profile.get("start_weight") or 180)
-                weight_lbs = st.number_input(
-                    "Weight (lbs)", min_value=50.0, max_value=500.0,
-                    value=float(existing["weight_lbs"])
-                    if existing is not None and existing.get("weight_lbs")
-                    else default_w,
-                    step=0.1
-                )
 
             st.subheader("😴 Sleep")
             sleep_hours = st.number_input(
